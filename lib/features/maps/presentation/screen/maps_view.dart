@@ -130,6 +130,9 @@ class _MapsViewState extends State<MapsView> {
                           child: Text(
                               'Duration: ${state.info?.totalDuration} - Distance ${state.info?.totalDistance}'),
                         )),
+                    SizedBox(height: 15),
+                    Text(
+                        '${state.myPosition?.position.latitude}, ${state.myPosition?.position.longitude}'),
                     Container(
                       height: 50,
                       margin: EdgeInsets.symmetric(vertical: 10),
@@ -144,8 +147,19 @@ class _MapsViewState extends State<MapsView> {
                             height: 50,
                             textColor: Colors.white,
                             borderColor: Colors.transparent,
-                            onPressed: () =>
-                                context.read<MapBloc>().activateMyLocation(),
+                            onPressed: () {
+                              context.read<MapBloc>().activateMyLocation();
+                              CameraUpdate.newCameraPosition(
+                                CameraPosition(
+                                  target: LatLng(
+                                      state.myPosition?.position.latitude ??
+                                          11.242034,
+                                      state.myPosition?.position.longitude ??
+                                          124.999902),
+                                  zoom: 16.5,
+                                ),
+                              );
+                            },
                           ),
                           PuvtsButton(
                             text: 'Find Passengers',

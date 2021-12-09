@@ -2,11 +2,11 @@ import 'dart:developer';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 import 'package:puvts_driver/app/locator_injection.dart';
 import 'package:puvts_driver/core/services/cached_services.dart';
 import 'package:puvts_driver/features/maps/data/model/location_dto.dart';
 import 'package:puvts_driver/features/maps/domain/bloc/map_state.dart';
-import 'package:location/location.dart';
 import 'package:puvts_driver/features/maps/domain/repositories/map_repositories.dart';
 
 class MapBloc extends Cubit<MapState> {
@@ -82,7 +82,7 @@ class MapBloc extends Cubit<MapState> {
   // }
 
   void locationPermission() async {
-    Location location = Location();
+    Location location = new Location();
 
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
@@ -95,6 +95,7 @@ class MapBloc extends Cubit<MapState> {
         return;
       }
     }
+
     _permissionGranted = await location.hasPermission();
     if (_permissionGranted == PermissionStatus.denied) {
       _permissionGranted = await location.requestPermission();
@@ -103,20 +104,25 @@ class MapBloc extends Cubit<MapState> {
       }
     }
 
-    _locationData = await location.getLocation();
-    emit(
-      state.copyWith(
-        isLoading: false,
-        myPosition: Marker(
-          markerId: MarkerId('myposition'),
-          position: LatLng(
-            _locationData.latitude ?? 11.242034,
-            _locationData.longitude ?? 124.999902,
+    location.onLocationChanged.listen((LocationData currentLocation) {
+      log('${currentLocation.latitude}');
+      emit(
+        state.copyWith(
+          isLoading: false,
+          myPosition: Marker(
+            markerId: MarkerId('myposition'),
+            position: LatLng(
+              currentLocation.latitude ?? 0,
+              currentLocation.longitude ?? 0,
+            ),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
           ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
-      ),
-    );
+      );
+    });
+
+    //_locationData = await location.getLocation();
   }
 
   void activateMyLocation() async {

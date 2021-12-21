@@ -11,5 +11,6 @@ class LoginSignupState with _$LoginSignupState {
     @Default(false) bool finished,
     @Default(true) bool obscurePassword,
     @Default(true) bool isCached,
+    @Default(true) bool isDriver,
   }) = _LoginSignupState;
 }

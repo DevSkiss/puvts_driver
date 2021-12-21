@@ -214,13 +214,7 @@ class _SignupViewState extends State<SignupView> {
                               width: 200,
                               height: 60,
                               buttonColor: puvtsBlue,
-                              onPressed: () =>
-                                  context.read<LoginSignupBloc>().signup(
-                                        firstname: firstNameController.text,
-                                        lastname: lastNameController.text,
-                                        username: usernameController.text,
-                                        password: passwordController.text,
-                                      ),
+                              onPressed: () {},
                               text: 'Signup',
                               textSize: 20,
                             ),

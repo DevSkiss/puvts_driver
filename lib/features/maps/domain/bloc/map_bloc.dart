@@ -1,10 +1,15 @@
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:logger/logger.dart';
 import 'package:puvts_driver/app/locator_injection.dart';
 import 'package:puvts_driver/core/services/cached_services.dart';
+import 'package:puvts_driver/features/login_signup/data/model/passenger_model.dart';
 import 'package:puvts_driver/features/maps/data/model/location_dto.dart';
 import 'package:puvts_driver/features/maps/domain/bloc/map_state.dart';
 import 'package:puvts_driver/features/maps/domain/repositories/map_repositories.dart';
@@ -15,6 +20,10 @@ class MapBloc extends Cubit<MapState> {
   }
   final MapRepository _mapRepository = locator<MapRepository>();
   final CachedService _cachedService = locator<CachedService>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  Location location = Location();
+  Logger _logger = Logger();
 
   void initialize() async {
     emit(state.copyWith(
@@ -24,7 +33,7 @@ class MapBloc extends Cubit<MapState> {
       isSuccess: false,
     ));
     // get my location and save it as marker
-    locationPermission();
+    checkUserAndPermission();
   }
 
   void resetState() {
@@ -40,53 +49,87 @@ class MapBloc extends Cubit<MapState> {
 
   LatLng defaultLatLong = LatLng(11.242034, 124.999902);
 
+  void logout() async {
+    await _auth.signOut();
+    await _cachedService.clearUser();
+  }
+
+  void updateMyLocation(
+      {required double longitude, required double latitude}) async {
+    try {
+      CollectionReference location =
+          FirebaseFirestore.instance.collection('location');
+      PassengerModel passenger = await _cachedService.getUser();
+
+      var result = await firestore
+          .collection('location')
+          .where('user_id', isEqualTo: passenger.id)
+          .where('user_type', isEqualTo: 'driver')
+          .get();
+
+      location
+          .doc(result.docs[0].id)
+          .update({
+            'longitude': longitude.toString(),
+            'latitude': latitude.toString(),
+          })
+          .then((value) => print("Location Updated"))
+          .catchError((error) => print("Failed to update location: $error"));
+    } catch (e) {
+      _logger.e(e);
+      throw UnimplementedError();
+    }
+  }
+
   Future<void> getPassengerLocation() async {
     log("Get Passenger Location");
     emit(state.copyWith(isLoading: true));
 
     Set<Marker> markers = {};
 
-    List<LocationDto> passenger = await _mapRepository.getPassengerLocation();
-    log(passenger[0].createdAt);
-    for (int i = 0; i < passenger.length; i++) {
-      log(passenger[i].longitude);
-      markers.add(
-        Marker(
-          markerId: MarkerId('${passenger[i].id}Position'),
-          infoWindow: InfoWindow(title: '${passenger[i].userType}'),
-          position: LatLng(
-            double.parse(passenger[i].latitude),
-            double.parse(passenger[i].longitude),
+    try {
+      emit(state.copyWith(isLoading: true));
+
+      var result = await firestore
+          .collection('location')
+          .where('user_type', isEqualTo: 'passenger')
+          .where('active', isEqualTo: true)
+          .get();
+
+      // LocationDto driverLocation =
+      //     LocationDto.fromJson(result.docs[0].data());
+
+      for (int i = 0; i < result.docs.length; i++) {
+        LocationDto _passengerLocation =
+            LocationDto.fromJson(result.docs[i].data());
+        markers.add(
+          Marker(
+            markerId: MarkerId('${_passengerLocation.userId}Position'),
+            infoWindow: InfoWindow(title: 'Passenger'),
+            position: LatLng(
+              double.parse(_passengerLocation.latitude),
+              double.parse(_passengerLocation.longitude),
+            ),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
           ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        );
+      }
+      emit(
+        state.copyWith(
+          isLoading: false,
+          markers: markers,
         ),
       );
+    } catch (e) {
+      debugPrint(e.toString());
+      throw UnimplementedError();
     }
-    emit(
-      state.copyWith(
-        isLoading: false,
-        markers: markers,
-      ),
-    );
   }
 
-  // void getDirectionDriver() async {
-  //   await getDriverLocation();
-
-  //   Directions newDirection = await _mapRepository.getDirection(
-  //     origin: state.myPosition?.position ?? defaultLatLong,
-  //     destination: state.driverPosition?.position ?? defaultLatLong,
-  //   );
-
-  //   emit(state.copyWith(info: newDirection));
-  // }
-
-  void locationPermission() async {
-    Location location = new Location();
-
+  void checkUserAndPermission() async {
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
-    LocationData _locationData;
 
     _serviceEnabled = await location.serviceEnabled();
     if (!_serviceEnabled) {
@@ -104,25 +147,7 @@ class MapBloc extends Cubit<MapState> {
       }
     }
 
-    location.onLocationChanged.listen((LocationData currentLocation) {
-      log('${currentLocation.latitude}');
-      emit(
-        state.copyWith(
-          isLoading: false,
-          myPosition: Marker(
-            markerId: MarkerId('myposition'),
-            position: LatLng(
-              currentLocation.latitude ?? 0,
-              currentLocation.longitude ?? 0,
-            ),
-            icon:
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          ),
-        ),
-      );
-    });
-
-    //_locationData = await location.getLocation();
+    emit(state.copyWith(isLoading: false));
   }
 
   void activateMyLocation() async {

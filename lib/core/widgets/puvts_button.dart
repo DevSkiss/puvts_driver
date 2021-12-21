@@ -2,7 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:puvts_driver/core/constants/puvts_colors.dart';
 
 class PuvtsButton extends StatelessWidget {
+  const PuvtsButton({
+    Key? key,
+    this.text,
+    this.onPressed,
+    this.width = 150,
+    this.isLoading = false,
+    this.height,
+    this.textSize,
+    this.textColor = Colors.white,
+    this.fontWeight,
+    this.icon,
+    this.buttonColor,
+    this.borderColor,
+    this.padding = const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+  }) : super(key: key);
+
   final String? text;
+  final bool isLoading;
   final VoidCallback? onPressed;
   final double? width;
   final double? height;
@@ -13,21 +30,6 @@ class PuvtsButton extends StatelessWidget {
   final double? textSize;
   final FontWeight? fontWeight;
   final Widget? icon;
-
-  const PuvtsButton(
-      {Key? key,
-      this.text,
-      this.onPressed,
-      this.width,
-      this.height,
-      this.textSize,
-      this.textColor = Colors.white,
-      this.fontWeight,
-      this.icon,
-      this.buttonColor,
-      this.borderColor,
-      this.padding})
-      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +44,31 @@ class PuvtsButton extends StatelessWidget {
           )),
       child: ElevatedButton(
         onPressed: onPressed,
-        child: icon ??
-            Text(
-              text ?? '',
-              style: TextStyle(
-                fontSize: textSize,
-                color: textColor,
-                fontWeight: fontWeight,
-              ),
-            ),
+        child: isLoading
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 15,
+                    width: 15,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: puvtsWhite,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text('Deactivate'),
+                ],
+              )
+            : icon ??
+                Text(
+                  text ?? '',
+                  style: TextStyle(
+                    fontSize: textSize,
+                    color: textColor,
+                    fontWeight: fontWeight,
+                  ),
+                ),
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: padding,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:puvts_driver/app/locator_injection.dart';
 import 'package:puvts_driver/core/constants/puvts_colors.dart';
 import 'package:puvts_driver/core/widgets/bottom_nav.dart';
 import 'package:puvts_driver/core/widgets/keyboard_dismisser.dart';
@@ -24,14 +23,55 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<LoginSignupBloc>(
-      create: (_) => locator<LoginSignupBloc>(),
+      create: (_) => LoginSignupBloc(),
       child: BlocConsumer<LoginSignupBloc, LoginSignupState>(
         listener: (BuildContext context, LoginSignupState state) async {
-          if (state.finished || state.isCached) {
+          if ((state.finished || state.isCached) &&
+              !state.isLoading &&
+              !state.hasError) {
             Navigator.pushReplacement(
                 context, MaterialPageRoute(builder: (context) => BottomNav()));
           }
 
+          if (!state.isDriver) {
+            showDialog<String>(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) => AlertDialog(
+                contentPadding: EdgeInsets.symmetric(horizontal: 24)
+                    .copyWith(top: 25, bottom: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                content: Container(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'You need to login as Passenger',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(height: 5),
+                      SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        child: PuvtsButton(
+                          height: 40,
+                          buttonColor: puvtsBlue,
+                          onPressed: () => Navigator.pop(context),
+                          text: 'Try Again',
+                          textSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
           if (state.hasError) {
             showDialog<String>(
               context: context,
@@ -115,7 +155,7 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       const SizedBox(height: 30),
                       PuvtsTextfield(
-                        labelText: 'Username',
+                        labelText: 'Email',
                         textStyle: TextStyle(
                             color: puvtsWhite.withOpacity(0.8), fontSize: 20),
                         controller: usernameController,
@@ -146,7 +186,7 @@ class _LoginViewState extends State<LoginView> {
                         height: 60,
                         buttonColor: puvtsBlue,
                         onPressed: () => context.read<LoginSignupBloc>().login(
-                              username: usernameController.text,
+                              email: usernameController.text,
                               password: passwordController.text,
                             ),
                         icon: state.isLoading

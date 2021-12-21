@@ -8,23 +8,23 @@ part of 'location_dto.dart';
 
 LocationDto _$LocationDtoFromJson(Map<String, dynamic> json) {
   return LocationDto(
-    json['is_active'] as bool,
-    json['createdAt'] as String,
-    json['_id'] as String,
-    json['longitude'] as String,
-    json['latitude'] as String,
-    json['userId'] as String,
+    json['active'] as bool,
     json['user_type'] as String,
+    json['firstname'] as String,
+    json['lastname'] as String,
+    json['user_id'] as String,
+    json['latitude'] as String,
+    json['longitude'] as String,
   );
 }
 
 Map<String, dynamic> _$LocationDtoToJson(LocationDto instance) =>
     <String, dynamic>{
-      'is_active': instance.isActive,
-      'createdAt': instance.createdAt,
-      '_id': instance.id,
-      'longitude': instance.longitude,
+      'active': instance.isActive,
+      'firstname': instance.firstname,
       'latitude': instance.latitude,
-      'userId': instance.userId,
+      'longitude': instance.longitude,
+      'lastname': instance.lastname,
+      'user_id': instance.userId,
       'user_type': instance.userType,
     };

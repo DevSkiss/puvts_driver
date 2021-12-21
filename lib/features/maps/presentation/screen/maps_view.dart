@@ -1,11 +1,11 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:puvts_driver/app/locator_injection.dart';
+import 'package:location/location.dart';
 import 'package:puvts_driver/core/constants/puvts_colors.dart';
-import 'package:puvts_driver/core/services/cached_services.dart';
 import 'package:puvts_driver/core/widgets/puvts_button.dart';
 import 'package:puvts_driver/features/login_signup/presentation/screens/login_view.dart';
 import 'package:puvts_driver/features/maps/domain/bloc/map_bloc.dart';
@@ -31,18 +31,68 @@ class MapsView extends StatefulWidget {
 }
 
 class _MapsViewState extends State<MapsView> {
-  LatLng defaultLatLong = LatLng(11.242034, 124.999902);
+  Location location = Location();
+  LocationData? locationData;
+  Timer? timer;
+  LatLng? position;
+  bool loading = false;
+  late StreamSubscription<LocationData> locationSub;
   static const _initialCameraPosition = CameraPosition(
-    target: LatLng(11.242034, 124.999902),
-    zoom: 14.5,
+    target: LatLng(11.0, 124.0),
+    zoom: 8,
   );
-  final CachedService _cachedService = locator<CachedService>();
-
   GoogleMapController? _googleMapController;
+
+  @override
+  void initState() {
+    timer = Timer.periodic(const Duration(seconds: 15), (Timer t) async {
+      await getLocation();
+      context.read<MapBloc>().updateMyLocation(
+          latitude: locationData?.latitude ?? 11,
+          longitude: locationData?.longitude ?? 124);
+    });
+    super.initState();
+  }
+
+  void _activate() {
+    setState(() {
+      loading = true;
+    });
+    locationSub =
+        location.onLocationChanged.listen((LocationData currentLocation) {
+      setState(() {
+        position = LatLng(
+          currentLocation.latitude ?? 11,
+          currentLocation.longitude ?? 124,
+        );
+        _googleMapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: position ?? LatLng(11, 124),
+              zoom: 16.5,
+            ),
+          ),
+        );
+      });
+    });
+  }
+
+  void _deactivate() {
+    setState(() {
+      loading = false;
+      locationSub.cancel();
+    });
+  }
+
+  Future<void> getLocation() async {
+    locationData = await location.getLocation();
+  }
 
   @override
   void dispose() {
     _googleMapController?.dispose();
+    locationSub.cancel();
+    timer?.cancel();
     super.dispose();
   }
 
@@ -65,7 +115,7 @@ class _MapsViewState extends State<MapsView> {
               IconButton(
                   onPressed: () async {
                     log('Remove User');
-                    await _cachedService.clearUser();
+                    context.read<MapBloc>().logout();
                     Navigator.of(context).pushAndRemoveUntil(
                       CupertinoPageRoute(
                         builder: (BuildContext context) {
@@ -110,16 +160,13 @@ class _MapsViewState extends State<MapsView> {
                         markers: {
                           if (state.markers != null) ...state.markers!,
                           Marker(
-                            markerId: MarkerId('empty'),
+                            markerId: MarkerId('driverPosition'),
+                            infoWindow: InfoWindow(title: 'Driver'),
+                            position: LatLng(position?.latitude ?? 11,
+                                position?.longitude ?? 124),
+                            icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueBlue),
                           ),
-                          state.driverPosition ??
-                              Marker(
-                                markerId: MarkerId('empty'),
-                              ),
-                          state.myPosition ??
-                              Marker(
-                                markerId: MarkerId('empty'),
-                              )
                         },
                       ),
                     ),
@@ -131,34 +178,30 @@ class _MapsViewState extends State<MapsView> {
                               'Duration: ${state.info?.totalDuration} - Distance ${state.info?.totalDistance}'),
                         )),
                     SizedBox(height: 15),
-                    Text(
-                        '${state.myPosition?.position.latitude}, ${state.myPosition?.position.longitude}'),
+                    if (locationData != null)
+                      Text(
+                          '${locationData?.latitude}, ${locationData?.longitude}'),
                     Container(
                       height: 50,
                       margin: EdgeInsets.symmetric(vertical: 10),
                       color: Colors.transparent,
                       width: double.infinity,
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           PuvtsButton(
-                            text: 'Send New Location',
+                            text: 'Acitavate',
+                            isLoading: loading,
                             buttonColor: puvtsBlue,
-                            height: 50,
                             textColor: Colors.white,
+                            height: 50,
                             borderColor: Colors.transparent,
                             onPressed: () {
-                              context.read<MapBloc>().activateMyLocation();
-                              CameraUpdate.newCameraPosition(
-                                CameraPosition(
-                                  target: LatLng(
-                                      state.myPosition?.position.latitude ??
-                                          11.242034,
-                                      state.myPosition?.position.longitude ??
-                                          124.999902),
-                                  zoom: 16.5,
-                                ),
-                              );
+                              if (loading) {
+                                _deactivate();
+                              } else {
+                                _activate();
+                              }
                             },
                           ),
                           PuvtsButton(
@@ -175,25 +218,6 @@ class _MapsViewState extends State<MapsView> {
                     )
                   ],
                 ),
-          floatingActionButton: Align(
-            alignment: Alignment.topLeft,
-            child: Container(
-              margin: EdgeInsets.only(top: 130, left: 30),
-              child: FloatingActionButton(
-                child: Icon(Icons.location_on),
-                onPressed: () => _googleMapController?.animateCamera(
-                  CameraUpdate.newCameraPosition(
-                    CameraPosition(
-                      target: LatLng(
-                          state.myPosition?.position.latitude ?? 11.242034,
-                          state.myPosition?.position.longitude ?? 124.999902),
-                      zoom: 16.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
         );
       },
     );

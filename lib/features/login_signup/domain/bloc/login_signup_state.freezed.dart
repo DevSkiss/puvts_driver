@@ -22,7 +22,8 @@ class _$LoginSignupStateTearOff {
       bool refresh = false,
       bool finished = false,
       bool obscurePassword = true,
-      bool isCached = true}) {
+      bool isCached = true,
+      bool isDriver = true}) {
     return _LoginSignupState(
       isLoading: isLoading,
       hasError: hasError,
@@ -30,6 +31,7 @@ class _$LoginSignupStateTearOff {
       finished: finished,
       obscurePassword: obscurePassword,
       isCached: isCached,
+      isDriver: isDriver,
     );
   }
 }
@@ -45,6 +47,7 @@ mixin _$LoginSignupState {
   bool get finished => throw _privateConstructorUsedError;
   bool get obscurePassword => throw _privateConstructorUsedError;
   bool get isCached => throw _privateConstructorUsedError;
+  bool get isDriver => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $LoginSignupStateCopyWith<LoginSignupState> get copyWith =>
@@ -62,7 +65,8 @@ abstract class $LoginSignupStateCopyWith<$Res> {
       bool refresh,
       bool finished,
       bool obscurePassword,
-      bool isCached});
+      bool isCached,
+      bool isDriver});
 }
 
 /// @nodoc
@@ -82,6 +86,7 @@ class _$LoginSignupStateCopyWithImpl<$Res>
     Object? finished = freezed,
     Object? obscurePassword = freezed,
     Object? isCached = freezed,
+    Object? isDriver = freezed,
   }) {
     return _then(_value.copyWith(
       isLoading: isLoading == freezed
@@ -108,6 +113,10 @@ class _$LoginSignupStateCopyWithImpl<$Res>
           ? _value.isCached
           : isCached // ignore: cast_nullable_to_non_nullable
               as bool,
+      isDriver: isDriver == freezed
+          ? _value.isDriver
+          : isDriver // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -125,7 +134,8 @@ abstract class _$LoginSignupStateCopyWith<$Res>
       bool refresh,
       bool finished,
       bool obscurePassword,
-      bool isCached});
+      bool isCached,
+      bool isDriver});
 }
 
 /// @nodoc
@@ -147,6 +157,7 @@ class __$LoginSignupStateCopyWithImpl<$Res>
     Object? finished = freezed,
     Object? obscurePassword = freezed,
     Object? isCached = freezed,
+    Object? isDriver = freezed,
   }) {
     return _then(_LoginSignupState(
       isLoading: isLoading == freezed
@@ -173,6 +184,10 @@ class __$LoginSignupStateCopyWithImpl<$Res>
           ? _value.isCached
           : isCached // ignore: cast_nullable_to_non_nullable
               as bool,
+      isDriver: isDriver == freezed
+          ? _value.isDriver
+          : isDriver // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -186,7 +201,8 @@ class _$_LoginSignupState implements _LoginSignupState {
       this.refresh = false,
       this.finished = false,
       this.obscurePassword = true,
-      this.isCached = true});
+      this.isCached = true,
+      this.isDriver = true});
 
   @JsonKey(defaultValue: false)
   @override
@@ -206,10 +222,13 @@ class _$_LoginSignupState implements _LoginSignupState {
   @JsonKey(defaultValue: true)
   @override
   final bool isCached;
+  @JsonKey(defaultValue: true)
+  @override
+  final bool isDriver;
 
   @override
   String toString() {
-    return 'LoginSignupState(isLoading: $isLoading, hasError: $hasError, refresh: $refresh, finished: $finished, obscurePassword: $obscurePassword, isCached: $isCached)';
+    return 'LoginSignupState(isLoading: $isLoading, hasError: $hasError, refresh: $refresh, finished: $finished, obscurePassword: $obscurePassword, isCached: $isCached, isDriver: $isDriver)';
   }
 
   @override
@@ -233,7 +252,10 @@ class _$_LoginSignupState implements _LoginSignupState {
                     .equals(other.obscurePassword, obscurePassword)) &&
             (identical(other.isCached, isCached) ||
                 const DeepCollectionEquality()
-                    .equals(other.isCached, isCached)));
+                    .equals(other.isCached, isCached)) &&
+            (identical(other.isDriver, isDriver) ||
+                const DeepCollectionEquality()
+                    .equals(other.isDriver, isDriver)));
   }
 
   @override
@@ -244,7 +266,8 @@ class _$_LoginSignupState implements _LoginSignupState {
       const DeepCollectionEquality().hash(refresh) ^
       const DeepCollectionEquality().hash(finished) ^
       const DeepCollectionEquality().hash(obscurePassword) ^
-      const DeepCollectionEquality().hash(isCached);
+      const DeepCollectionEquality().hash(isCached) ^
+      const DeepCollectionEquality().hash(isDriver);
 
   @JsonKey(ignore: true)
   @override
@@ -259,7 +282,8 @@ abstract class _LoginSignupState implements LoginSignupState {
       bool refresh,
       bool finished,
       bool obscurePassword,
-      bool isCached}) = _$_LoginSignupState;
+      bool isCached,
+      bool isDriver}) = _$_LoginSignupState;
 
   @override
   bool get isLoading => throw _privateConstructorUsedError;
@@ -273,6 +297,8 @@ abstract class _LoginSignupState implements LoginSignupState {
   bool get obscurePassword => throw _privateConstructorUsedError;
   @override
   bool get isCached => throw _privateConstructorUsedError;
+  @override
+  bool get isDriver => throw _privateConstructorUsedError;
   @override
   @JsonKey(ignore: true)
   _$LoginSignupStateCopyWith<_LoginSignupState> get copyWith =>

@@ -1,4 +1,4 @@
-package com.example.puvts_driver
+package app.com.puvts_driver
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,7 +1,5 @@
 import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -10,6 +8,7 @@ import 'package:logger/logger.dart';
 import 'package:puvts_driver/app/locator_injection.dart';
 import 'package:puvts_driver/core/services/cached_services.dart';
 import 'package:puvts_driver/features/login_signup/data/model/passenger_model.dart';
+import 'package:puvts_driver/features/login_signup/data/service/auth_service_api.dart';
 import 'package:puvts_driver/features/maps/data/model/location_dto.dart';
 import 'package:puvts_driver/features/maps/domain/bloc/map_state.dart';
 import 'package:puvts_driver/features/maps/domain/repositories/map_repositories.dart';
@@ -20,7 +19,7 @@ class MapBloc extends Cubit<MapState> {
   }
   final MapRepository _mapRepository = locator<MapRepository>();
   final CachedService _cachedService = locator<CachedService>();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthApiService _authApiService = locator<AuthApiService>();
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   Location location = Location();
   Logger _logger = Logger();
@@ -50,8 +49,7 @@ class MapBloc extends Cubit<MapState> {
   LatLng defaultLatLong = LatLng(11.242034, 124.999902);
 
   void logout() async {
-    await _auth.signOut();
-    await _cachedService.clearUser();
+    await _authApiService.logout();
   }
 
   void updateMyLocation(

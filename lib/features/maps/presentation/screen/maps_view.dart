@@ -31,6 +31,7 @@ class MapsView extends StatefulWidget {
 }
 
 class _MapsViewState extends State<MapsView> {
+  int numberOfSeat = 0;
   Location location = Location();
   LocationData? locationData;
   Timer? timer;
@@ -169,6 +170,46 @@ class _MapsViewState extends State<MapsView> {
                           ),
                         },
                       ),
+                    ),
+                    Column(
+                      children: [
+                        SizedBox(height: 16),
+                        Text('Seat Availability'),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (numberOfSeat != 0) {
+                                    numberOfSeat--;
+                                  }
+                                });
+                                context.read<MapBloc>().updateSeatAvailablility(
+                                    seatAvailable: numberOfSeat);
+                              },
+                              icon: Icon(
+                                Icons.remove_circle,
+                                color: Colors.red,
+                              ),
+                            ),
+                            Text('$numberOfSeat'),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  numberOfSeat++;
+                                });
+                                context.read<MapBloc>().updateSeatAvailablility(
+                                    seatAvailable: numberOfSeat);
+                              },
+                              icon: Icon(
+                                Icons.add_circle,
+                                color: Colors.blue,
+                              ),
+                            )
+                          ],
+                        ),
+                      ],
                     ),
                     Visibility(
                         visible: state.info != null,

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -79,6 +80,31 @@ class MapBloc extends Cubit<MapState> {
     }
   }
 
+  void updateSeatAvailablility({required int seatAvailable}) async {
+    try {
+      CollectionReference location =
+          FirebaseFirestore.instance.collection('location');
+      PassengerModel passenger = await _cachedService.getUser();
+
+      var result = await firestore
+          .collection('location')
+          .where('user_id', isEqualTo: passenger.id)
+          .where('user_type', isEqualTo: 'driver')
+          .get();
+
+      location
+          .doc(result.docs[0].id)
+          .update({
+            'seat_available': seatAvailable,
+          })
+          .then((value) => print("Update Seat Availability"))
+          .catchError((error) => print("Failed to update location: $error"));
+    } catch (e) {
+      _logger.e(e);
+      throw UnimplementedError();
+    }
+  }
+
   Future<void> getPassengerLocation() async {
     log("Get Passenger Location");
     emit(state.copyWith(isLoading: true));
@@ -97,21 +123,28 @@ class MapBloc extends Cubit<MapState> {
       // LocationDto driverLocation =
       //     LocationDto.fromJson(result.docs[0].data());
 
+      print(result);
+
       for (int i = 0; i < result.docs.length; i++) {
         LocationDto _passengerLocation =
             LocationDto.fromJson(result.docs[i].data());
-        markers.add(
-          Marker(
-            markerId: MarkerId('${_passengerLocation.userId}Position'),
-            infoWindow: InfoWindow(title: 'Passenger'),
-            position: LatLng(
-              double.parse(_passengerLocation.latitude),
-              double.parse(_passengerLocation.longitude),
+
+        log("${_passengerLocation.latitude} , ${_passengerLocation.longitude}");
+        if (_passengerLocation.latitude != '' &&
+            _passengerLocation.longitude != '') {
+          markers.add(
+            Marker(
+              markerId: MarkerId('${_passengerLocation.userId}Position'),
+              infoWindow: InfoWindow(title: 'Passenger'),
+              position: LatLng(
+                double.parse(_passengerLocation.latitude),
+                double.parse(_passengerLocation.longitude),
+              ),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueRed),
             ),
-            icon:
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          ),
-        );
+          );
+        }
       }
       emit(
         state.copyWith(

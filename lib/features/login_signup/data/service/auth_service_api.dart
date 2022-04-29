@@ -54,7 +54,7 @@ class AuthApiServiceImpl extends AuthApiService {
       await _cachedService.clearUser();
     } catch (e) {
       _logger.e(e);
-      //   throw UnimplementedError();
+      rethrow;
     }
   }
 
